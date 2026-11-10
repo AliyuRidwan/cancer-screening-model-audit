@@ -1,0 +1,41 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Auditing a Cancer-Screening Model</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1b2433;--mute:#5d6778;--line:#dfe3ea;--a:#0f766e;--b:#b45309;--r:#b42318;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12171f;--card:#1a212c;--ink:#e8ecf2;--mute:#9aa5b5;--line:#2a3340;--a:#3fc1b3;--b:#e2a94b;--r:#f97066;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12171f;--card:#1a212c;--ink:#e8ecf2;--mute:#9aa5b5;--line:#2a3340;--a:#3fc1b3;--b:#e2a94b;--r:#f97066;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Source Sans 3",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 40px}h1{font-size:1.6rem;margin:0}p.s{margin:4px 0 16px;color:var(--mute)}
+.c,.k{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px}
+.k span{color:var(--mute);font-size:.9rem}.k b{display:block;font-size:1.6rem}.k.r b{color:var(--r)}
+.sl{display:flex;align-items:center;gap:12px;flex-wrap:wrap}input[type=range]{flex:1;min-width:180px;accent-color:var(--a)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}@media(max-width:720px){.grid{grid-template-columns:1fr}}
+h2{font-size:1rem;margin:0 0 8px}.box{position:relative;height:240px}
+table{border-collapse:collapse;width:100%;text-align:center}td,th{border:1px solid var(--line);padding:8px}th{color:var(--mute);font-weight:600}
+footer{color:var(--mute);font-size:.85rem;margin-top:12px}
+</style></head><body><main>
+<h1>Can you trust a 97% accurate cancer-screening model?</h1>
+<p class="s">A model audit on the public Wisconsin breast-cancer dataset (569 patients, 30 measurements each). Drag the slider and watch what accuracy hides.</p>
+<section class="kpis"><div class="k"><span>Patients</span><b>569</b></div><div class="k"><span>Confirmed malignant</span><b id="k1"></b></div><div class="k"><span>Accuracy</span><b id="k2"></b></div><div class="k r"><span>Cancers missed</span><b id="k3"></b></div></section>
+<section class="c"><div class="sl"><label for="t"><b>Alarm threshold:</b> flag a patient if P(malignant) ≥ <b id="tv"></b></label><input id="t" type="range" min="0" max="18" value="9"></div>
+<table style="margin-top:10px"><tr><th></th><th>Model: malignant</th><th>Model: benign</th></tr><tr><th>Truly malignant</th><td id="tp"></td><td id="fn"></td></tr><tr><th>Truly benign</th><td id="fp"></td><td id="tn"></td></tr></table>
+<p id="ins" style="margin:10px 0 0"></p></section>
+<section class="grid"><div class="c"><h2>Missed cancers vs false alarms by threshold</h2><div class="box"><canvas id="c1"></canvas></div></div>
+<div class="c"><h2>What separates malignant from benign (effect size)</h2><div class="box"><canvas id="c2"></canvas></div></div></section>
+<section class="c"><h2>Audit notes</h2><ul style="margin:0;padding-left:18px"><li>Accuracy at the default 0.5 cut-off looks excellent, but a missed cancer and a false alarm are not equal mistakes.</li><li>Lowering the threshold catches more cancers at the cost of more false alarms. The right setting is a clinical decision, not a statistical one.</li><li>The dataset has no demographic fields, so nobody can say whether it represents patients in Lagos, Abuja or Atlanta. Always test a model on the population it will serve.</li></ul></section>
+<footer>Data: UCI Breast Cancer Wisconsin (Diagnostic), public. Model: standardized logistic regression, 5-fold cross-validated predictions. Educational analysis, not medical advice.</footer>
+</main><script>
+const T=[0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95],R=[[211, 53, 1, 304], [209, 37, 3, 320], [208, 26, 4, 331], [208, 21, 4, 336], [207, 18, 5, 339], [206, 15, 6, 342], [206, 9, 6, 348], [204, 5, 8, 352], [204, 5, 8, 352], [204, 5, 8, 352], [202, 4, 10, 353], [201, 2, 11, 355], [200, 0, 12, 357], [197, 0, 15, 357], [195, 0, 17, 357], [190, 0, 22, 357], [188, 0, 24, 357], [185, 0, 27, 357], [181, 0, 31, 357]],E=[["concave points", 2.33], ["perimeter", 2.12], ["radius", 2.05], ["concavity", 1.87], ["area", 1.86], ["compactness", 1.45]],st=getComputedStyle(document.documentElement);let c1,c2;
+function draw(){const a=st.getPropertyValue("--a").trim(),r=st.getPropertyValue("--r").trim(),b=st.getPropertyValue("--b").trim(),m=st.getPropertyValue("--mute").trim();
+Chart.defaults.color=m;Chart.defaults.font.family='"Source Sans 3",system-ui,sans-serif';if(c1){c1.destroy();c2.destroy()}
+c1=new Chart(c1c,{type:"line",data:{labels:T,datasets:[{label:"Missed cancers",data:R.map(x=>x[2]),borderColor:r,backgroundColor:r,tension:.2},{label:"False alarms",data:R.map(x=>x[1]),borderColor:b,backgroundColor:b,tension:.2}]},options:{maintainAspectRatio:false,scales:{x:{title:{display:true,text:"Threshold"}},y:{beginAtZero:true}}}});
+c2=new Chart(c2c,{type:"bar",data:{labels:E.map(x=>x[0]),datasets:[{data:E.map(x=>Math.abs(x[1])),backgroundColor:a}]},options:{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false}}}});}
+const c1c=document.getElementById("c1"),c2c=document.getElementById("c2"),$=id=>document.getElementById(id);
+function upd(){const i=+$("t").value,[tp,fp,fn,tn]=R[i];$("tv").textContent=T[i].toFixed(2);$("tp").textContent=tp;$("fn").textContent=fn;$("fp").textContent=fp;$("tn").textContent=tn;
+$("k1").textContent=tp+fn;$("k2").textContent=((tp+tn)/569*100).toFixed(1)+"%";$("k3").textContent=fn+" of "+(tp+fn);
+$("ins").textContent=`At ${T[i].toFixed(2)}, the model misses ${fn} of ${tp+fn} cancers and raises ${fp} false alarms.`}
+$("t").addEventListener("input",upd);matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);upd();draw();
+</script></body></html>
