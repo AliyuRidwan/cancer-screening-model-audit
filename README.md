@@ -22,7 +22,7 @@ Standardized logistic regression with 5-fold cross-validated predictions, a conf
 Open the notebook in Google Colab and choose Runtime > Run all.
 
 ## Links
-- Interactive dashboard: [add your link]
+Dashboard.html.html
 - Write-up: [add your link]
 
 Author: Ridwan Aliyu | BI & Data Analytics | linkedin.com/in/ridwan-aliyu
