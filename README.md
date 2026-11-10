@@ -17,14 +17,14 @@ Standardized logistic regression with 5-fold cross-validated predictions, a conf
 ## Files
 - `cancer-screening-model-audit.ipynb`: the full analysis
 - `breast_cancer_wisconsin_public.csv`: the dataset
+- `dashboard.html`: the interactive dashboard
 
 ## Run it
 Open the notebook in Google Colab and choose Runtime > Run all.
 
 ## Links
-Dashboard.html.html
-- Write-up: [add your link]
+- [Interactive dashboard](https://aliyuridwan.github.io/cancer-screening-model-audit/dashboard.html): drag the threshold slider and watch the trade-off between missed cancers and false alarms.
 
-Author: Ridwan Aliyu | BI & Data Analytics | linkedin.com/in/ridwan-aliyu
+Author: Ridwan Aliyu | BI & Data Analytics | [LinkedIn](https://www.linkedin.com/in/ridwan-aliyu/)
 
 *Educational analysis on public data. Not medical advice.*
